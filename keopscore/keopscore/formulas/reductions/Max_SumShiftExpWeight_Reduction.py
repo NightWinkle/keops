@@ -46,16 +46,16 @@ class Max_SumShiftExpWeight_Reduction(Reduction):
         if xi.dtype == "half2":
             KeOps_Error("Not implemented.")
 
-        tmpexp = c_variable(acc.dtype, new_c_varname("tmpexp"))
+        tmpexp = c_variable(xi.dtype, new_c_varname("tmpexp"))
         loop, k = c_for_loop(1, self.dimred, 1, pragma_unroll=True)
         return f"""       
                       {tmpexp.declare()}
                       if ({acc.id}[0] > {xi.id}[0]) {{ // =  exp(m)  * (s + s'*exp(m'-m))   if m > m'
-                        {tmpexp.assign(keops_exp(xi[0]-acc[0]))}
+                        {tmpexp.assign(keops_exp(xi[0]-acc[0].to(xi.dtype)))}
                         {loop(acc[k].add_assign(xi[k]*tmpexp))}
                       }} else {{             // =  exp(m') * (s' + exp(m-m')*s)   if m <= m'
-                        {tmpexp.assign(keops_exp(acc[0]-xi[0]))}
-                        {loop(acc[k].assign(xi[k]+tmpexp*acc[k]))}
+                        {tmpexp.assign(keops_exp(acc[0].to(xi.dtype)-xi[0]))}
+                        {loop(acc[k].assign(xi[k].to(acc.dtype)+tmpexp.to(acc.dtype)*acc[k]))}
                         {acc[0].assign(xi[0])}
                       }}
               """

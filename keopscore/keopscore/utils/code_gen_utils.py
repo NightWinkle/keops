@@ -111,6 +111,17 @@ class c_variable:
         else:
             return f"{self.id} += ({value.id});\n"
 
+    def to(self, dtype: str):
+        """Allows to cast a c_variable to another dtype.
+
+        Args:
+            dtype (str): dtype to cast to
+
+        Returns:
+            c_variable: casted c_variable
+        """
+        return c_variable(dtype, cast_to(dtype, self))
+
     def binary_op(self, other, python_op, c_op, name, dtype=None):
         if type(other) in (int, float):
             if type(other) == int:
